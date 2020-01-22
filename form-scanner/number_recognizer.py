@@ -1,6 +1,11 @@
 import cv2
 import numpy as np
 
+import keras
+from keras.models import load_model
+
+model = load_model('MNIST_RNN.h5')
+
 def recognize_digit(image_np):
     """
     Распознавание одной цифры
@@ -17,19 +22,36 @@ def recognize_digit(image_np):
     #gray_image_np = cv2.morphologyEx(gray_image_np, cv2.MORPH_CLOSE, kernel)
     gray_image_np = cv2.morphologyEx(gray_image_np, cv2.MORPH_OPEN, kernel)
     gray_image_np = cv2.bitwise_not(gray_image_np)
-    _, contours,hierarchy = cv2.findContours(gray_image_np,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-    cnt = contours
     x,y,w,h = cv2.boundingRect(gray_image_np)
-    print(gray_image_np)
-    gray_image_np = gray_image_np[y:y+h,x:x+w] #Получили обрезанные цифры
+    gray_image_np = gray_image_np[y:y+h,x:x+w] #Получили обрезанную цифру
 
-    # Добавить нормировку под датасет MNIST
+    # Нормировка под датасет MNIST
+    # Размер изображения 28x28, размер цифры 20x20, центровка по центру масс (пока нет)
 
-    cv2.imshow('image', gray_image_np)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    scale_rate = 20 / max(gray_image_np.shape)
+    newX,newY = gray_image_np.shape[1]*scale_rate, gray_image_np.shape[0]*scale_rate
+    gray_image_np = cv2.resize(gray_image_np,(int(newX),int(newY)))
 
-    return 0
+    top_pad =  round((28 - gray_image_np.shape[0]) / 2)
+    bottom_pad = (28 - gray_image_np.shape[0]) // 2
+    if gray_image_np.shape[0] + top_pad + bottom_pad < 28 : top_pad+=1
+    left_pad = round((28 - gray_image_np.shape[1]) / 2)
+    right_pad = (28 - gray_image_np.shape[1]) // 2
+    if gray_image_np.shape[1] + left_pad + right_pad < 28: right_pad+=1
+    print(gray_image_np.shape)
+    print(top_pad, bottom_pad, left_pad, right_pad)
+    gray_image_np = np.pad(gray_image_np, ((top_pad, bottom_pad), (left_pad, right_pad)), 'constant', constant_values=(0,))
+
+    image4predict = np.expand_dims(gray_image_np.copy(), axis=0)
+    image4predict = np.expand_dims(image4predict, axis=-1)
+    digit_value = model.predict(image4predict, verbose=1)
+    digit_value = np.argmax(digit_value, 1)
+    print(digit_value)
+    #cv2.imshow('image', gray_image_np)
+    #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
+
+    return digit_value[0]
 
 def split_code(image_np):
 
@@ -45,5 +67,7 @@ def recognize_code(image_np):
 
     for digit_np in split_code(image_np):
         digits.append(recognize_digit(digit_np))
-
+    listToStr = ''.join([str(elem) for elem in digits])
+    print(listToStr)
+    int(listToStr)
     return -1
