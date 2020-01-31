@@ -3,3 +3,5 @@
 result.jpg
 form-scanner/__pycache__/*
 Thumbs.db
+сканы Газпром/*
+*.pyc

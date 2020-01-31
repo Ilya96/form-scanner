@@ -88,6 +88,10 @@ def align_form(image_np):
     right_bottom_mark = marks[2]
     left_top_mark = (int(left_bottom_mark[0] + (right_top_mark[0] - right_bottom_mark[0])), int(right_top_mark[1] + (left_bottom_mark[1] - right_bottom_mark[1])))
 
+    right_top_mark = (right_top_mark[0] + kernel_shape, right_top_mark[1] - kernel_shape)
+    left_bottom_mark = (left_bottom_mark[0] - kernel_shape, left_bottom_mark[1] + kernel_shape)
+    left_top_mark = (left_top_mark[0] - kernel_shape, left_top_mark[1] - kernel_shape)
+    right_bottom_mark = (right_bottom_mark[0] + kernel_shape, right_bottom_mark[1] + kernel_shape)
     pts_src = np.float32(
         [
             left_top_mark,
