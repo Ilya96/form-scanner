@@ -1,11 +1,14 @@
 import tkinter as tk
 from tkinter import filedialog
 
-import form_scanner.scan_manager
+from scan_manager import ScanManager
 
 class MainWindow(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
+
+        self._scan_manager = None
+
         self.master = master
         self.master.title("Сортировка бланков")
         self.pack()
@@ -25,6 +28,9 @@ class MainWindow(tk.Frame):
         print("start_proccessing")
         src_dir = self._src_dir_entry.get()
         dst_dir = self._dst_dir_entry.get()
+        self._scan_manager = ScanManager(src_dir, dst_dir)
+        self._scan_manager.recognize()
+        self._scan_manager.save_results()
 
     def create_widgets(self):
         frame1 = tk.Frame(self)
