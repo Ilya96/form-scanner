@@ -5,8 +5,10 @@ import number_recognizer
 import form_saver
 from tqdm import tqdm
 
+
 class ScanManager:
     NOT_RECOGNIZED_FORM_NAME = 'NOT_RECOGNIZED'
+
     def __init__(self, src_dir, dst_dir):
         self.src_dir = src_dir
         self.dst_dir = dst_dir
@@ -16,12 +18,13 @@ class ScanManager:
         self.batches = {}
 
     def prepare_target_dir(self, dst_dir):
-        
+
         if not os.path.exists(dst_dir):
             os.makedirs(dst_dir)
         if not os.path.exists(os.path.join(dst_dir, ScanManager.NOT_RECOGNIZED_FORM_NAME)):
-            os.makedirs(os.path.join(dst_dir, ScanManager.NOT_RECOGNIZED_FORM_NAME))
-        
+            os.makedirs(os.path.join(
+                dst_dir, ScanManager.NOT_RECOGNIZED_FORM_NAME))
+
     def load_dir(self, path):
         mask = "{path}/*.jpg".format(path=path)
         self.src_files = glob.glob(mask)
@@ -40,7 +43,8 @@ class ScanManager:
             image_np = self.im_load(im_name)
             number = number_recognizer.recognize_code(image_np)
             if number is None:
-                self.batches[ScanManager.NOT_RECOGNIZED_FORM_NAME].append(im_name)
+                self.batches[ScanManager.NOT_RECOGNIZED_FORM_NAME].append(
+                    im_name)
             else:
                 if number not in self.batches.keys():
                     self.batches[number] = []
