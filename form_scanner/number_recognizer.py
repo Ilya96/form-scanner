@@ -76,8 +76,8 @@ class CodeRecognizer:
         right_pad = (28 - gray_image_np.shape[1]) // 2
         if gray_image_np.shape[1] + left_pad + right_pad < 28:
             right_pad += 1
-        print(gray_image_np.shape)
-        print(top_pad, bottom_pad, left_pad, right_pad)
+        #print(gray_image_np.shape)
+        #print(top_pad, bottom_pad, left_pad, right_pad)
         gray_image_np = np.pad(gray_image_np, ((
             top_pad, bottom_pad), (left_pad, right_pad)), 'constant', constant_values=(0,))
 
@@ -85,7 +85,7 @@ class CodeRecognizer:
         image4predict = np.expand_dims(image4predict, axis=-1)
         digit_value = self.model.predict(image4predict, verbose=1)
         digit_value = np.argmax(digit_value, 1)
-        print(digit_value)
+        #print(digit_value)
         #cv2.imshow('image', gray_image_np)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
@@ -182,12 +182,9 @@ class CodeRecognizer:
         kernel_shape = int(gray_image_np.shape[0] * 0.04)
         kernel = np.ones((kernel_shape, kernel_shape), np.uint8)
 
+        #print(gray_image_np.shape)
         gray_image_np = cv2.erode(gray_image_np, kernel, iterations=1)
         gray_image_np = cv2.dilate(gray_image_np, kernel, iterations=1)
-
-        #cv2.imshow('image', gray_image_np)
-        #cv2.waitKey(0)
-        #cv2.destroyAllWindows()
 
         #x,y,w,h = cv2.boundingRect(gray_image_np)
         # gray_image_np = gray_image_np[y:y+h,x:x+w] #Получили обрезанную цифру
@@ -218,14 +215,14 @@ class CodeRecognizer:
             # cv2.destroyAllWindows()
             # Расстояние нормируем на площадь шаблона
             distances[i] = np.abs(dif_1_image_np).sum()/np_digit.sum()
-        print("------------------------------------------------")
+        #print("------------------------------------------------")
         segments_weights = self.get_9_segments_weights(gray_image_np)
         # Убираем тренд
         segments_weights = segments_weights - np.min(segments_weights)
         # Нормируем по максимальному заполнению
         segments_weights = segments_weights / np.max(segments_weights)
 
-        print(segments_weights)
+        #print(segments_weights)
         #print(CodeRecognizer.pc_digit_segments_categorical)
         #print(distances)
         categorical_rate = segments_weights * CodeRecognizer.pc_digit_segments_categorical
@@ -251,17 +248,26 @@ class CodeRecognizer:
 
     def recognize_code(self, image_np):
 
-        template_image_np = image_np[int(0.055*image_np.shape[0])+1:int(
-            0.087*image_np.shape[0])+1, int(0.415*image_np.shape[1])+1: int(0.775*image_np.shape[1])+1]
-        templates = []
-        for digit_np in self.split_code(template_image_np, 10):
-            templates.append(self.recognize_digit(digit_np, alignment=True))
-        print(templates)
+        if image_np is None:
+            return None
+        #template_image_np = image_np[int(0.055*image_np.shape[0])+1:int(
+        #    0.087*image_np.shape[0])+1, int(0.415*image_np.shape[1])+1: int(0.775*image_np.shape[1])+1]
+        #templates = []
+        #for digit_np in self.split_code(template_image_np, 10):
+        #    templates.append(self.recognize_digit(digit_np, alignment=True))
+        #print(templates)
 
+        #cv2.imshow('image', image_np)
+        #cv2.waitKey(0)
+        #cv2.destroyAllWindows()
         image_np = image_np[int(0.0*image_np.shape[0])+1:int(0.037*image_np.shape[0])+1, int(0.547*image_np.shape[1])+1: int(0.76*image_np.shape[1])+1]
+        #cv2.imshow('image', image_np)
+        #cv2.waitKey(0)
+        #cv2.destroyAllWindows()
+
         digits = []
         for digit_np in self.split_code(image_np):
             digits.append(self.recognize_digit(digit_np))
         listToStr = ''.join([str(elem) for elem in digits])
-        print(listToStr)
+        #print(listToStr)
         return int(listToStr)
