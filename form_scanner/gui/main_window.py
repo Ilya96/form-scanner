@@ -1,5 +1,8 @@
+import os
 import tkinter as tk
+from tkinter import messagebox
 from tkinter import filedialog
+import tkinter.scrolledtext as tkst
 
 from scan_manager import ScanManager
 
@@ -26,13 +29,30 @@ class MainWindow(tk.Frame):
 
     def start_proccessing(self):
         print("start_proccessing")
+
         src_dir = self._src_dir_entry.get()
         dst_dir = self._dst_dir_entry.get()
+        is_error = False
+        if not os.path.isdir(src_dir):
+            messagebox.showerror("Error", "Не указан путь к папке с оригиналами или путь не является папкой")
+            is_error = True
+        if not os.path.isdir(dst_dir):
+            messagebox.showerror("Error", "Не указан путь к папке назначения или путь не является папкой")
+            is_error = True
+        if is_error: return
+
+        self._start_processing_button['state'] = 'disable'
         self._scan_manager = ScanManager(src_dir, dst_dir)
         self._scan_manager.recognize()
         self._scan_manager.save_results()
 
+    def add2log(self, text):
+        self._log_text.ap
+
     def create_widgets(self):
+
+        self.master.resizable(False, False)
+
         frame1 = tk.Frame(self)
         frame1.pack(fill=tk.X)
 
@@ -64,3 +84,7 @@ class MainWindow(tk.Frame):
 
         lbl3 = tk.Button(frame3, text="Начать обработку", command=self.start_proccessing)
         lbl3.pack(side=tk.RIGHT, anchor=tk.N, padx=5, pady=5)
+        self._start_processing_button = lbl3
+
+        self._log_text = tkst.ScrolledText(self)
+        self._log_text.pack(side=tk.LEFT)
