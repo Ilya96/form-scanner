@@ -58,7 +58,7 @@ class CodeRecognizer:
         gray_image_np = cv2.bitwise_not(gray_image_np)
         x, y, w, h = cv2.boundingRect(gray_image_np)
         # Получили обрезанную цифру
-        gray_image_np = gray_image_np[y:y+h, x:x+w]
+        #gray_image_np = gray_image_np[y:y+h, x:x+w]
 
         # Нормировка под датасет MNIST
         # Размер изображения 28x28, размер цифры 20x20, центровка по центру масс (пока нет)
