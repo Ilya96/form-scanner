@@ -1,5 +1,6 @@
 import os
 import tkinter as tk
+from datetime import datetime
 from tkinter import messagebox
 from tkinter import filedialog
 import tkinter.scrolledtext as tkst
@@ -16,6 +17,7 @@ class MainWindow(tk.Frame):
         self.master.title("Сортировка бланков")
         self.pack()
         self.create_widgets()
+        self.add2log("Программа сортировки бланков")
 
     def request_src_dir(self):
         dir_name =  filedialog.askdirectory(initialdir = ".",title = "Выберите папку с исходными файлами")
@@ -43,11 +45,14 @@ class MainWindow(tk.Frame):
 
         self._start_processing_button['state'] = 'disable'
         self._scan_manager = ScanManager(src_dir, dst_dir)
+        self._scan_manager.set_log_handler(self.add2log)
         self._scan_manager.recognize()
         self._scan_manager.save_results()
 
     def add2log(self, text):
-        self._log_text.ap
+        self._log_text.insert(tk.END, datetime.strftime(datetime.now(), "%H:%M:%S") + ": " + text + '\n')
+        self._log_text.see('end')
+        self._log_text.update()
 
     def create_widgets(self):
 
@@ -60,7 +65,7 @@ class MainWindow(tk.Frame):
         lbl1.pack(side=tk.LEFT, padx=5, pady=5)
 
         entry1 = tk.Entry(frame1)
-        entry1.pack(side=tk.LEFT,padx=5, expand=True)
+        entry1.pack(fill=tk.X, side=tk.LEFT,padx=5, expand=True)
         self._src_dir_entry = entry1
 
         chDir_1 = tk.Button(frame1, text='...', command=self.request_src_dir)
@@ -87,4 +92,5 @@ class MainWindow(tk.Frame):
         self._start_processing_button = lbl3
 
         self._log_text = tkst.ScrolledText(self)
+        #self._log_text = tk.Text(self)
         self._log_text.pack(side=tk.LEFT)
