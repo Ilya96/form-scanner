@@ -54,6 +54,7 @@ class ScanManager:
         print("Recognizing form numbers")
         for im_name in self.src_files:
             #print(im_name)
+
             self.add2log("Распознавание изображения: {}".format(im_name))
             image_np = self.im_load(im_name)
             image_np = align_form(image_np)
