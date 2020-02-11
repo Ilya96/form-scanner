@@ -235,7 +235,7 @@ class CodeRecognizer:
         #print(error)
         #print(rate.argmax())
 
-        return error.argmin()
+        return error.argmin(), error.min()
 
     def split_code(self, image_np, length=5):
 
@@ -267,7 +267,8 @@ class CodeRecognizer:
 
         digits = []
         for digit_np in self.split_code(image_np):
-            digits.append(self.recognize_digit(digit_np))
+            val, rate = self.recognize_digit(digit_np)
+            digits.append(val)
         listToStr = ''.join([str(elem) for elem in digits])
         #print(listToStr)
         return int(listToStr)
