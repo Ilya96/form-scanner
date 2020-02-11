@@ -4,8 +4,61 @@ from datetime import datetime
 from tkinter import messagebox
 from tkinter import filedialog
 import tkinter.scrolledtext as tkst
+from PIL import Image, ImageTk
 
 from scan_manager import ScanManager
+
+
+import gui.tkSimpleDialog
+
+class HandRecognizeDialog(gui.tkSimpleDialog.Dialog):
+    def __init__(self, image_path, parent, title = None):
+        self._image_path = image_path
+        gui.tkSimpleDialog.Dialog.__init__(self, parent, title)
+
+    def body(self, master):
+
+
+        screen_width = master.winfo_screenwidth()
+        screen_height = master.winfo_screenheight()
+
+        load = Image.open(self._image_path)
+
+        w = screen_width//2
+        h = int(load.size[1] * (w/load.size[0]))
+        load = load.resize((w, h))
+
+        h = load.size[1] // 3
+        w = load.size[0]
+        load = load.crop((0, 0, w, h))
+
+        render = ImageTk.PhotoImage(load)
+
+        self.e1 = tk.Entry(master)
+        self.e1.grid(row=1, column=0)
+        self.geometry("{}x{}".format(w, h+100))
+
+        self.img = tk.Label(master, image=render)
+        self.img.image = render
+        self.img.grid(row=0, column=0)
+
+        return self.e1 # initial focus
+
+    def validate(self):
+        try:
+            number = int(self.e1.get())
+            self.result = number
+            return 1
+        except ValueError:
+            messagebox.showwarning(
+                "Bad input",
+                "Номер бланка должен быть числом"
+            )
+            return 0
+
+    def apply(self):
+        pass
+
 
 class MainWindow(tk.Frame):
     def __init__(self, master=None):
@@ -47,6 +100,12 @@ class MainWindow(tk.Frame):
         self._scan_manager = ScanManager(src_dir, dst_dir)
         self._scan_manager.set_log_handler(self.add2log)
         self._scan_manager.recognize()
+
+
+        for im_path in self._scan_manager.pop_unrecognized():
+            d = HandRecognizeDialog(im_path, self.master)
+            self._scan_manager.add_handrecognized(d.result, im_path)
+
         self._scan_manager.save_results()
 
     def add2log(self, text):

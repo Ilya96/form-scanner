@@ -50,7 +50,6 @@ class ScanManager:
         return total_forms, not_recognized
         """
         self.batches[ScanManager.NOT_RECOGNIZED_FORM_NAME] = []
-        print(self.src_files)
         print("Recognizing form numbers")
         for im_name in self.src_files:
             #print(im_name)
@@ -71,6 +70,17 @@ class ScanManager:
             self.add2log("-----------------------------------------")
 
         return len(self.src_files), len(self.batches[ScanManager.NOT_RECOGNIZED_FORM_NAME])
+
+    def pop_unrecognized(self):
+        while len(self.batches[ScanManager.NOT_RECOGNIZED_FORM_NAME])>0:
+            yield self.batches[ScanManager.NOT_RECOGNIZED_FORM_NAME].pop()
+
+    def add_handrecognized(self, number, im_name):
+        self.add2log("Задан номер {} для бланка {}".format(number, im_name))
+        if number not in self.batches.keys():
+            self.batches[number] = []
+        self.batches[number].append(im_name)
+
 
     def save_results(self):
         print("Saving results to pdfs'")
