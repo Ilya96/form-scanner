@@ -106,20 +106,20 @@ def align_form(image_np):
         is_inSizeRange = True
         dist = np.linalg.norm(box[0]-box[1])
         is_inSizeRange = is_inSizeRange and mark_expected_size * \
-            0.9 < dist and mark_expected_size*1.1 > dist
+            0.8 < dist and mark_expected_size*1.1 > dist
         dist = np.linalg.norm(box[1]-box[2])
         is_inSizeRange = is_inSizeRange and mark_expected_size * \
-            0.9 < dist and mark_expected_size*1.1 > dist
+            0.8 < dist and mark_expected_size*1.1 > dist
         dist = np.linalg.norm(box[2]-box[3])
         is_inSizeRange = is_inSizeRange and mark_expected_size * \
-            0.9 < dist and mark_expected_size*1.1 > dist
+            0.8 < dist and mark_expected_size*1.1 > dist
         dist = np.linalg.norm(box[3]-box[0])
         is_inSizeRange = is_inSizeRange and mark_expected_size * \
-            0.9 < dist and mark_expected_size*1.1 > dist
+            0.8 < dist and mark_expected_size*1.1 > dist
         if is_inSizeRange:
             box = np.int0(box)  # округление координат
             # рисуем прямоугольник
-            cv2.drawContours(image_np, [box], 0, (255, 0, 0), 5)
+            #cv2.drawContours(image_np, [box], 0, (255, 0, 0), 5)
             center = (int(rect[0][0]), int(rect[0][1]))
             marks.append(center)
 
@@ -150,7 +150,7 @@ def align_form(image_np):
     )
     left_top_mark_1 = (left_top_mark[0]-20, left_top_mark[1]-20)
     left_top_mark_2 = (left_top_mark[0]+20, left_top_mark[1]+20)
-    cv2.rectangle(image_np, left_top_mark_1, left_top_mark_2, (255, 0, 0), 5)
+    #cv2.rectangle(image_np, left_top_mark_1, left_top_mark_2, (255, 0, 0), 5)
     pts_dst = np.float32(
         [
             [0, 0],
