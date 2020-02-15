@@ -2,6 +2,7 @@ import os
 import glob
 import cv2
 import number_recognizer
+import numpy as np
 from number_recognizer import CodeRecognizer
 from form_alignment import align_form
 import form_saver
@@ -43,7 +44,11 @@ class ScanManager:
 
     def im_load(self, name):
         #full_name = os.path.join(self.src_dir, name)
-        return cv2.imread(name)
+        f = open(name, "rb")
+        chunk = f.read()
+        chunk_arr = np.frombuffer(chunk, dtype=np.uint8)
+        img = cv2.imdecode(chunk_arr, cv2.IMREAD_COLOR)
+        return img#cv2.imread(name)
 
     def recognize(self):
         """
