@@ -128,10 +128,39 @@ def align_form(image_np):
         right_top_mark = sorted_marks[0]
         left_bottom_mark = sorted_marks[1]
         right_bottom_mark = sorted_marks[2]
-        left_top_mark = (int(left_bottom_mark[0] + (right_top_mark[0] - right_bottom_mark[0])), int(
-            right_top_mark[1] + (left_bottom_mark[1] - right_bottom_mark[1])))
+
+    elif len(marks) == 2:
+        print("[WARNING] olny 2 marks")
+        if marks[1][0] > marks[0][0]:
+            marks[0], marks[1] = marks[1], marks[0] # Первая метка всегда ниже
+        if marks[0][0] > image_np.shape[0] / 2 and marks[1][0] > image_np.shape[0] / 2: # Обе метки внизу
+            pass
+        elif marks[0][0] > image_np.shape[0] / 2 and marks[1][0] < image_np.shape[0] / 2: # первая метка внизу, вторая наверху
+            right_top_mark = marks[1]
+            if marks[0][1] > image_np.shape[1] / 2: # Правая нижняя метка имеется
+                v_distance = np.linalg.norm(marks[0]-marks[1])
+                h_distance = 184/280 * v_distance
+                right_bottom_mark = marks[0]
+                alpha  = np.arctan((right_bottom_mark[0] - right_top_mark[0])/(right_bottom_mark[1] - right_top_mark[1]))
+                beta = 90 - alpha
+                # Восстанавливаем потерянную левую нижнюю метку
+                left_bottom_mark = (marks[0][0]+h_distance*np.cos(beta), marks[0][1] - h_distance * np.sin(beta))
+            else: # Левая нижняя метка имеется
+                left_bottom_mark = marks[0]
+                c_distance = np.linalg.norm(marks[0]-marks[1]) # Диагональ
+                v_distance = np.sqrt(c_distance**2 / (1 + (184/280)**2))
+                h_distance = 184 / 280 * v_distance
+                # Восстанавливаем потерянную правую  нижнюю метку
+                right_bottom_mark = 0
+
     else:
+        print("Cannot align: detected {} marks".format(len(marks)))
         return None
+
+    # Левая верхняя метка всегда отсутствует
+    left_top_mark = (int(left_bottom_mark[0] + (right_top_mark[0] - right_bottom_mark[0])), int(
+            right_top_mark[1] + (left_bottom_mark[1] - right_bottom_mark[1])))
+
     right_top_mark = (
         right_top_mark[0] + kernel_shape, right_top_mark[1] - kernel_shape)
     left_bottom_mark = (
