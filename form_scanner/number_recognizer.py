@@ -266,9 +266,18 @@ class CodeRecognizer:
         #cv2.destroyAllWindows()
 
         digits = []
+        is_success = True
         for digit_np in self.split_code(image_np):
             val, rate = self.recognize_digit(digit_np)
+            if rate > 2:
+                print("Not success recognize digit")
+                is_success = False
+                val = 'X'
+            print(val, rate)
             digits.append(val)
         listToStr = ''.join([str(elem) for elem in digits])
-        #print(listToStr)
-        return int(listToStr)
+        print(listToStr)
+        if is_success:
+            return int(listToStr)
+        else:
+            return listToStr

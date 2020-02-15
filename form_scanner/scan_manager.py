@@ -67,11 +67,15 @@ class ScanManager:
                 self.add2log("[WARNING] Номер бланка не распознан.")
                 self.batches[ScanManager.NOT_RECOGNIZED_FORM_NAME].append(
                     im_name)
-            else:
+            elif type(number) == int:
                 self.add2log("Распознанный номер бланка: {}".format(number))
                 if number not in self.batches.keys():
                     self.batches[number] = []
                 self.batches[number].append(im_name)
+            elif type(number) == str:
+                self.add2log("Номер бланка распознан не полностью: {}".format(number))
+                self.batches[ScanManager.NOT_RECOGNIZED_FORM_NAME].append(
+                    im_name)
             self.add2log("-----------------------------------------")
 
         return len(self.src_files), len(self.batches[ScanManager.NOT_RECOGNIZED_FORM_NAME])
