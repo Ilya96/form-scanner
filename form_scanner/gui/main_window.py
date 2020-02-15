@@ -107,6 +107,7 @@ class MainWindow(tk.Frame):
             self._scan_manager.add_handrecognized(d.result, im_path)
 
         self._scan_manager.save_results()
+        self._start_processing_button['state'] = 'active'
 
     def add2log(self, text):
         self._log_text.insert(tk.END, datetime.strftime(datetime.now(), "%H:%M:%S") + ": " + text + '\n')
