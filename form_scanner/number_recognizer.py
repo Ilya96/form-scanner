@@ -1,6 +1,12 @@
 import cv2
 import numpy as np
+from keras import backend as K
 
+def debug_show_image(image_np, name='Image'):
+    #cv2.imshow(name, image_np)
+    #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
+    pass
 
 class CodeRecognizer:
     pc_digit_segments_categorical = np.array([  # 1  2  3  4  5  6  7  8  9
@@ -29,15 +35,81 @@ class CodeRecognizer:
         [1, 2, 4, 5, 7]  # 9
     ]
 
+    rnn_pc_img_cols = 50
+    rnn_pc_img_rows = 100
+
     def __init__(self, mode='POST_CODE'):
         self.recognize_digit = None
         if mode == 'POST_CODE':
-            self.recognize_digit = self.recognize_pc_digit
+            self.recognize_digit = self.recognize_pc_digits
         elif mode == 'HAND_DIGITS':
             import keras
             from keras.models import load_model
             self.model = load_model('MNIST_RNN.h5')
-            self.recognize_digit = self.recognize_hw_digit
+            self.recognize_digit = self.recognize_hw_digits
+        elif mode == 'POST_CODE_RNN':
+            from keras.models import load_model
+            self.model = load_model('PC_RNN.h5')
+            self.recognize_digit = self.recognize_rnn_pc_digits
+
+    def prepare_image_for_rnn_pc(self, image_np):
+        gray_image_np = cv2.cvtColor(image_np.copy(), cv2.COLOR_RGB2GRAY)
+        _, gray_image_np = cv2.threshold(
+            gray_image_np, 200, 255, cv2.THRESH_BINARY)
+
+        w = gray_image_np.shape[1]
+        #gray_image_np = gray_image_np[:, int(w*0.125):int(w*0.875)]
+        gray_image_np = gray_image_np[int(image_np.shape[0]*0.01):int(
+            image_np.shape[0]*0.97), int(image_np.shape[1]*0.03):int(image_np.shape[1]*0.97)]
+        gray_image_np = cv2.bitwise_not(gray_image_np.copy())
+
+
+        kernel_shape = image_np.shape[0] * 0.03
+        kernel_shape = int(kernel_shape)
+        kernel = np.ones((kernel_shape, kernel_shape), np.uint8)
+        gray_image_np = cv2.morphologyEx(
+            gray_image_np, cv2.MORPH_CLOSE, kernel)
+        gray_image_np = cv2.morphologyEx(gray_image_np, cv2.MORPH_OPEN, kernel)
+
+        x, y, w, h = cv2.boundingRect(gray_image_np)
+        # Получили обрезанную цифру
+        if w != 0 or h != 0:
+            gray_image_np = gray_image_np[y:y+h, x:x+w]
+
+        gray_image_np = cv2.resize(gray_image_np, (int(CodeRecognizer.rnn_pc_img_cols), int(CodeRecognizer.rnn_pc_img_rows)))
+        return gray_image_np
+
+    def recognize_rnn_pc_digits(self, image_np_list):
+        img_cols = CodeRecognizer.rnn_pc_img_cols
+        img_rows = CodeRecognizer.rnn_pc_img_rows
+
+        images_np_prepared = []
+        for image_np in image_np_list:
+            images_np_prepared.append(self.prepare_image_for_rnn_pc(image_np))
+        data_np = np.stack(images_np_prepared)
+
+        if K.image_data_format() == 'channels_first':
+            data_np = data_np.reshape(data_np.shape[0], 1, img_rows, img_cols)
+            input_shape = (1, img_rows, img_cols)
+        else:
+            data_np = data_np.reshape(data_np.shape[0], img_rows, img_cols, 1)
+            input_shape = (img_rows, img_cols, 1)
+        data_np = data_np.astype('float32')
+        data_np /=255
+        digit_value = self.model.predict(data_np, verbose=1)
+        digit_value_rate = np.max(digit_value, 1)
+        digit_value_pred = np.argmax(digit_value, 1)
+        answer = []
+        for ind, pred in enumerate(digit_value_pred):
+            answer.append((pred, digit_value_rate[ind]))
+        return answer
+
+    def recognize_hw_digits(self, image_np_list):
+        answer = []
+        for image_np in image_np_list:
+            answer.append(self.recognize_hw_digit(image_np))
+        print(answer)
+        return answer
 
     def recognize_hw_digit(self, image_np):
         """
@@ -84,13 +156,13 @@ class CodeRecognizer:
         image4predict = np.expand_dims(gray_image_np.copy(), axis=0)
         image4predict = np.expand_dims(image4predict, axis=-1)
         digit_value = self.model.predict(image4predict, verbose=1)
-        digit_value = np.argmax(digit_value, 1)
+        digit_value_pred = np.argmax(digit_value, 1)
         #print(digit_value)
         #cv2.imshow('image', gray_image_np)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
 
-        return digit_value[0]
+        return digit_value_pred[0], np.max(digit_value, 1)
 
     def get_segment_weight(self, image_np, mask):
         image_np = cv2.bitwise_or(image_np, image_np, mask=mask)
@@ -155,18 +227,28 @@ class CodeRecognizer:
         np_digit = self.get_9_segments(segs, size)
         return np_digit
 
-    def recognize_pc_digit(self, image_np, alignment=False):
+    def recognize_pc_digits(self, image_np_list):
+        answer = []
+        for image_np in image_np_list:
+            answer.append(self.recognize_pc_digit(image_np))
+        return answer
+
+    def recognize_pc_digit(self, image_np):
 
         gray_image_np = cv2.cvtColor(image_np.copy(), cv2.COLOR_RGB2GRAY)
+
+        debug_show_image(gray_image_np, 'Digit')
 
         _, gray_image_np = cv2.threshold(
             gray_image_np, 200, 255, cv2.THRESH_BINARY)
 
         w = gray_image_np.shape[1]
-        gray_image_np = gray_image_np[:, int(w*0.125):int(w*0.875)]
-        gray_image_np = gray_image_np[int(image_np.shape[0]*0.03):int(
+        #gray_image_np = gray_image_np[:, int(w*0.125):int(w*0.875)]
+        gray_image_np = gray_image_np[int(image_np.shape[0]*0.01):int(
             image_np.shape[0]*0.97), int(image_np.shape[1]*0.03):int(image_np.shape[1]*0.97)]
         gray_image_np = cv2.bitwise_not(gray_image_np.copy())
+
+        debug_show_image(gray_image_np, 'Digit')
 
         kernel_shape = image_np.shape[0] * 0.03
         kernel_shape = int(kernel_shape)
@@ -178,6 +260,8 @@ class CodeRecognizer:
         x, y, w, h = cv2.boundingRect(gray_image_np)
         # Получили обрезанную цифру
         gray_image_np = gray_image_np[y:y+h, x:x+w]
+
+        debug_show_image(gray_image_np, 'Digit')
 
         kernel_shape = int(gray_image_np.shape[0] * 0.04)
         kernel = np.ones((kernel_shape, kernel_shape), np.uint8)
@@ -192,6 +276,7 @@ class CodeRecognizer:
         newX, newY = w, w*2
         gray_image_np = cv2.resize(gray_image_np, (int(newX), int(newY)))
 
+        debug_show_image(gray_image_np, 'Digit')
         # Находим расстояние
         distances = np.zeros([10, ])
         for i in range(10):
@@ -210,9 +295,7 @@ class CodeRecognizer:
             dif_2_image_np = cv2.bitwise_or(
                 dif_2_image_np, dif_2_image_np, mask=np_digit)
 
-            #cv2.imshow('image_'+str(i), dif_2_image_np)
-            # cv2.waitKey(0)
-            # cv2.destroyAllWindows()
+
             # Расстояние нормируем на площадь шаблона
             distances[i] = np.abs(dif_1_image_np).sum()/np_digit.sum()
         #print("------------------------------------------------")
@@ -235,7 +318,7 @@ class CodeRecognizer:
         #print(error)
         #print(rate.argmax())
 
-        return error.argmin(), error.min()
+        return error.argmin(), 1/error.min()
 
     def split_code(self, image_np, length=5):
 
@@ -245,6 +328,9 @@ class CodeRecognizer:
             digit = image_np[:, int(i*digit_width):int((i+1)*digit_width)].copy()
             digits.append(digit)
         return digits
+
+    def get_code(self, image_np):
+        return image_np[int(0.0*image_np.shape[0])+1:int(0.04*image_np.shape[0])+1, int(0.547*image_np.shape[1])+1: int(0.76*image_np.shape[1])+1]
 
     def recognize_code(self, image_np):
 
@@ -257,19 +343,18 @@ class CodeRecognizer:
         #    templates.append(self.recognize_digit(digit_np, alignment=True))
         #print(templates)
 
-        #cv2.imshow('image', image_np)
-        #cv2.waitKey(0)
-        #cv2.destroyAllWindows()
-        image_np = image_np[int(0.0*image_np.shape[0])+1:int(0.037*image_np.shape[0])+1, int(0.547*image_np.shape[1])+1: int(0.76*image_np.shape[1])+1]
-        #cv2.imshow('image', image_np)
-        #cv2.waitKey(0)
-        #cv2.destroyAllWindows()
+        debug_show_image(image_np, 'Src image')
+        image_np = self.get_code(image_np)
+        debug_show_image(image_np, 'Number image')
 
         digits = []
         is_success = True
-        for digit_np in self.split_code(image_np):
-            val, rate = self.recognize_digit(digit_np)
-            if rate > 2:
+        for val, rate in self.recognize_digit(self.split_code(image_np)):
+            if rate < 0.5:
+                print("Not success recognize digit")
+                is_success = False
+                val = 'X'
+            elif val>9:
                 print("Not success recognize digit")
                 is_success = False
                 val = 'X'
