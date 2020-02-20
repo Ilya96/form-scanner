@@ -6,7 +6,7 @@ import numpy as np
 from number_recognizer import CodeRecognizer
 from form_alignment import align_form
 import form_saver
-
+import random
 
 class ScanManager:
     NOT_RECOGNIZED_FORM_NAME = 'NOT_RECOGNIZED'
@@ -18,7 +18,7 @@ class ScanManager:
         self.load_dir(src_dir)
         self.prepare_target_dir(dst_dir)
         self.batches = {}
-        self._code_recognizer = CodeRecognizer()
+        self._code_recognizer = CodeRecognizer(mode='POST_CODE_RNN')
         self._log_handler = None
 
     def set_log_handler(self, fcn):
@@ -39,7 +39,7 @@ class ScanManager:
         #        dst_dir, ScanManager.NOT_RECOGNIZED_FORM_NAME))
 
     def load_dir(self, path):
-        mask = "{path}/*.jpg".format(path=path)
+        mask = "{path}/*/*.jpg".format(path=path)
         self.src_files = glob.glob(mask)
 
     def im_load(self, name):
@@ -90,6 +90,23 @@ class ScanManager:
             self.batches[number] = []
         self.batches[number].append(im_name)
 
+    def save_to_dateset(self, code, im_name_list):
+        while len(code)< 5:
+            code = '0'+code
+        for im_name in im_name_list:
+            image_np = self.im_load(im_name)
+            if image_np is None:
+                continue
+            image_np = align_form(image_np)
+            if image_np is None:
+                continue
+            image_np = self._code_recognizer.get_code(image_np)
+            if image_np is None:
+                continue
+            digits = self._code_recognizer.split_code(image_np)
+            for i, d in enumerate(digits):
+                print('./raw_dataset/'+str(code[i])+'/'+str(random.randint(10000,10000000))+'.jpg')
+                cv2.imwrite('./raw_dataset/'+str(code[i])+'/'+str(random.randint(10000,10000000))+'.jpg', d)
 
     def save_results(self):
         print("Saving results to pdfs'")
@@ -99,4 +116,5 @@ class ScanManager:
             #for im_name in im_name_list:
             #    im_full_name_list.append(os.path.join(self.src_dir, im_name))
             #if im_id != ScanManager.NOT_RECOGNIZED_FORM_NAME:
+            #self.save_to_dateset(str(im_id), im_name_list)
             form_saver.save_form_batch(im_name_list, os.path.join(self.dst_dir, str(im_id)+'.pdf'))
