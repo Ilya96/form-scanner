@@ -7,3 +7,5 @@ Thumbs.db
 *.pyc
 source_img/*
 target/*
+ru_source/*
+dataset/*
