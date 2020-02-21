@@ -39,8 +39,10 @@ class ScanManager:
         #        dst_dir, ScanManager.NOT_RECOGNIZED_FORM_NAME))
 
     def load_dir(self, path):
-        mask = "{path}/*/*.jpg".format(path=path)
+        mask = "{path}/*.jpg".format(path=path)
         self.src_files = glob.glob(mask)
+        mask = "{path}/*/*.jpg".format(path=path)
+        self.src_files.append(glob.glob(mask))
 
     def im_load(self, name):
         #full_name = os.path.join(self.src_dir, name)
