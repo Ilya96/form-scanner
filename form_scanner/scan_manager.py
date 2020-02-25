@@ -42,7 +42,17 @@ class ScanManager:
         mask = "{path}/*.jpg".format(path=path)
         self.src_files = glob.glob(mask)
         mask = "{path}/*/*.jpg".format(path=path)
-        self.src_files.append(glob.glob(mask))
+        self.src_files.extend(glob.glob(mask))
+        mask = "{path}/*.bmp".format(path=path)
+        self.src_files.extend(glob.glob(mask))
+        mask = "{path}/*/*.bmp".format(path=path)
+        self.src_files.extend(glob.glob(mask))
+        mask = "{path}/*.jpeg".format(path=path)
+        self.src_files.extend(glob.glob(mask))
+        mask = "{path}/*/*.jpeg".format(path=path)
+        self.src_files.extend(glob.glob(mask))
+        print(self.src_files)
+        self.add2log("Список файлов: {}".format(self.src_files))
 
     def im_load(self, name):
         #full_name = os.path.join(self.src_dir, name)
