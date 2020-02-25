@@ -96,7 +96,7 @@ class CodeRecognizer:
             input_shape = (img_rows, img_cols, 1)
         data_np = data_np.astype('float32')
         data_np /=255
-        digit_value = self.model.predict(data_np, verbose=1)
+        digit_value = self.model.predict(data_np, verbose=0)
         digit_value_rate = np.max(digit_value, 1)
         digit_value_pred = np.argmax(digit_value, 1)
         answer = []
@@ -358,7 +358,7 @@ class CodeRecognizer:
                 print("Not success recognize digit")
                 is_success = False
                 val = 'X'
-            print(val, rate)
+            #print(val, rate)
             digits.append(val)
         listToStr = ''.join([str(elem) for elem in digits])
         print(listToStr)
