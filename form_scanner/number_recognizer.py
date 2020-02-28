@@ -3,6 +3,7 @@ import numpy as np
 from keras import backend as K
 
 def debug_show_image(image_np, name='Image'):
+    #image_np = cv2.resize(image_np, (500, 760))
     #cv2.imshow(name, image_np)
     #cv2.waitKey(0)
     #cv2.destroyAllWindows()
@@ -237,7 +238,7 @@ class CodeRecognizer:
 
         gray_image_np = cv2.cvtColor(image_np.copy(), cv2.COLOR_RGB2GRAY)
 
-        debug_show_image(gray_image_np, 'Digit')
+        #debug_show_image(gray_image_np, 'Digit')
 
         _, gray_image_np = cv2.threshold(
             gray_image_np, 200, 255, cv2.THRESH_BINARY)
@@ -248,7 +249,7 @@ class CodeRecognizer:
             image_np.shape[0]*0.97), int(image_np.shape[1]*0.03):int(image_np.shape[1]*0.97)]
         gray_image_np = cv2.bitwise_not(gray_image_np.copy())
 
-        debug_show_image(gray_image_np, 'Digit')
+        #debug_show_image(gray_image_np, 'Digit')
 
         kernel_shape = image_np.shape[0] * 0.03
         kernel_shape = int(kernel_shape)
@@ -261,7 +262,7 @@ class CodeRecognizer:
         # Получили обрезанную цифру
         gray_image_np = gray_image_np[y:y+h, x:x+w]
 
-        debug_show_image(gray_image_np, 'Digit')
+        #debug_show_image(gray_image_np, 'Digit')
 
         kernel_shape = int(gray_image_np.shape[0] * 0.04)
         kernel = np.ones((kernel_shape, kernel_shape), np.uint8)
@@ -276,7 +277,7 @@ class CodeRecognizer:
         newX, newY = w, w*2
         gray_image_np = cv2.resize(gray_image_np, (int(newX), int(newY)))
 
-        debug_show_image(gray_image_np, 'Digit')
+        #debug_show_image(gray_image_np, 'Digit')
         # Находим расстояние
         distances = np.zeros([10, ])
         for i in range(10):
@@ -345,7 +346,7 @@ class CodeRecognizer:
 
         debug_show_image(image_np, 'Src image')
         image_np = self.get_code(image_np)
-        debug_show_image(image_np, 'Number image')
+        #debug_show_image(image_np, 'Number image')
 
         digits = []
         is_success = True
