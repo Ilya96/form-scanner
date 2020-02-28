@@ -10,3 +10,6 @@ target/*
 ru_source/*
 dataset/*
 raw_dataset/*
+dist/*
+build/*
+output/*
