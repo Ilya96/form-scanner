@@ -1,5 +1,4 @@
 from tkinter import filedialog
-from tkinter import *
 import tkinter as tk
 import cv2
 
@@ -8,7 +7,7 @@ from number_recognizer import CodeRecognizer
 from gui.main_window import MainWindow
 
 def main():
-    root = Tk()
+    root = tk.Tk()
     filename =  filedialog.askopenfilename(initialdir = ".",title = "Select file",filetypes = (("jpeg files","*.jpg"),("all files","*.*")))
     root.destroy()
     print (filename)
