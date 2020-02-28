@@ -55,12 +55,12 @@ class ScanManager:
         self.add2log("Список файлов: {}".format(self.src_files))
 
     def im_load(self, name):
-        #full_name = os.path.join(self.src_dir, name)
         f = open(name, "rb")
         chunk = f.read()
         chunk_arr = np.frombuffer(chunk, dtype=np.uint8)
         img = cv2.imdecode(chunk_arr, cv2.IMREAD_COLOR)
-        return img#cv2.imread(name)
+        f.close()
+        return img
 
     def recognize(self):
         """
@@ -73,7 +73,14 @@ class ScanManager:
 
             self.add2log("Распознавание изображения: {}".format(im_name))
             image_np = self.im_load(im_name)
-            image_np = align_form(image_np)
+            orig_im = image_np.copy()
+            image_np, is_turned = align_form(image_np)
+            if is_turned:
+                f = open(im_name, "wb")
+                chunk_arr = cv2.imencode('.jpg', orig_im)[1]
+                chunk = chunk_arr.tobytes()
+                f.write(chunk)
+                f.close()
             number = self._code_recognizer.recognize_code(image_np)
             if number is None:
                 self.add2log("[WARNING] Номер бланка не распознан.")
@@ -92,9 +99,46 @@ class ScanManager:
 
         return len(self.src_files), len(self.batches[ScanManager.NOT_RECOGNIZED_FORM_NAME])
 
+    def is_has_unrecognized(self):
+        return len(self.batches[ScanManager.NOT_RECOGNIZED_FORM_NAME])>0
+
+    def get_count_unrecognized(self):
+        return len(self.batches[ScanManager.NOT_RECOGNIZED_FORM_NAME])
+
+    def get_all_codes(self):
+        return self.batches.keys()
+
+    def get_all_scans_by_code(self, code):
+        return self.batches[code]
+
     def pop_unrecognized(self):
         while len(self.batches[ScanManager.NOT_RECOGNIZED_FORM_NAME])>0:
             yield self.batches[ScanManager.NOT_RECOGNIZED_FORM_NAME].pop()
+
+    def get_single_page_forms(self):
+        single_page_forms = []
+        for key, pages in self.batches.items():
+            if len(pages) == 1:
+                single_page_forms.append((key, pages[0]))
+        while len(single_page_forms) > 0:
+            yield single_page_forms.pop()
+
+    def update_key_for_single_scan(self, old_key, new_key, im_name):
+        new_key = int(new_key)
+        if old_key == new_key: return
+        if new_key not in self.batches.keys():
+            self.batches[new_key] = []
+        self.batches[old_key].remove(im_name)
+        self.batches[new_key].append(im_name)
+        if len(self.batches[old_key]) == 0:
+            self.batches.pop(old_key)
+
+    def update_key_for_single_page_form(self, old_key, new_key):
+        if old_key == new_key: return
+        value = self.batches.pop(old_key)
+        if new_key not in self.batches.keys():
+            self.batches[new_key] = []
+        self.batches[new_key].extend(value)
 
     def add_handrecognized(self, number, im_name):
         self.add2log("Задан номер {} для бланка {}".format(number, im_name))
@@ -109,7 +153,7 @@ class ScanManager:
             image_np = self.im_load(im_name)
             if image_np is None:
                 continue
-            image_np = align_form(image_np)
+            image_np, _ = align_form(image_np)
             if image_np is None:
                 continue
             image_np = self._code_recognizer.get_code(image_np)
