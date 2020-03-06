@@ -7,6 +7,7 @@ from number_recognizer import CodeRecognizer
 from form_alignment import align_form
 import form_saver
 import random
+import imutils
 
 class ScanManager:
     NOT_RECOGNIZED_FORM_NAME = 'NOT_RECOGNIZED'
@@ -69,14 +70,13 @@ class ScanManager:
         self.batches[ScanManager.NOT_RECOGNIZED_FORM_NAME] = []
         print("Recognizing form numbers")
         for im_name in self.src_files:
-            #print(im_name)
-
             self.add2log("Распознавание изображения: {}".format(im_name))
             image_np = self.im_load(im_name)
             orig_im = image_np.copy()
-            image_np, is_turned = align_form(image_np)
-            if is_turned:
+            image_np, turned = align_form(image_np)
+            if turned != 0:
                 f = open(im_name, "wb")
+                orig_im = imutils.rotate_bound(orig_im, turned)
                 chunk_arr = cv2.imencode('.jpg', orig_im)[1]
                 chunk = chunk_arr.tobytes()
                 f.write(chunk)
