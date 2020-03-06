@@ -106,7 +106,14 @@ class ScanManager:
         return len(self.batches[ScanManager.NOT_RECOGNIZED_FORM_NAME])
 
     def get_all_codes(self):
-        return self.batches.keys()
+        def key_cast(k):
+            try:
+                return int(k)
+            except Exception:
+                return 0
+        k_list = list(self.batches.keys())
+        k_list.sort(key=key_cast)
+        return k_list
 
     def get_all_scans_by_code(self, code):
         return self.batches[code]
