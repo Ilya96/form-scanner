@@ -130,10 +130,15 @@ def find_marks(image_np):
     return marks
 
 def align_form(image_np):
+    is_turned = 0
     MARK_RELATIVE_SIZE = 1/41
     mark_expected_size = image_np.shape[1] * MARK_RELATIVE_SIZE
     kernel_shape = mark_expected_size / 2
     kernel_shape = int(kernel_shape)
+
+    if  image_np.shape[1] > image_np.shape[0]:
+        image_np = imutils.rotate_bound(image_np, 90)
+        is_turned += 90
 
     marks = find_marks(image_np)
 
@@ -149,9 +154,7 @@ def align_form(image_np):
         marks = find_marks(image_np)
         image_np = imutils.rotate(image_np, 180)
         marks = find_marks(image_np)
-        is_turned = True
-    else:
-        is_turned = False
+        is_turned += 180
 
     if len(marks) == 3:
         sorted_marks = sorted(marks, key=clockwiseangle_and_distance)
@@ -159,10 +162,8 @@ def align_form(image_np):
         left_bottom_mark = sorted_marks[1]
         right_bottom_mark = sorted_marks[2]
 
-
     elif len(marks) == 2:
         print("[WARNING] olny 2 marks")
-
         #return None
         if marks[1][1] > marks[0][1]:
             marks[0], marks[1] = marks[1], marks[0] # Первая метка всегда ниже
