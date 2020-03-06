@@ -119,6 +119,26 @@ class CheckWindow(tk.Frame):
             pass
             #print(e)
 
+    def OnEntryDown(self, event):
+        w = event.widget
+        selection = int(w.curselection()[0])
+
+        if selection < w.size()-1:
+            w.select_clear(selection)
+            selection += 1
+            w.select_set(selection)
+        w.event_generate("<<ListboxSelect>>", when="tail")
+
+    def OnEntryUp(self, event):
+        w = event.widget
+        selection = int(w.curselection()[0])
+
+        if selection > 0:
+            w.select_clear(selection)
+            selection -= 1
+            w.select_set(selection)
+        w.event_generate("<<ListboxSelect>>", when="tail")
+
     def create_widgets(self):
         screen_width = self.master.winfo_screenwidth()
         screen_height = self.master.winfo_screenheight()
@@ -132,22 +152,26 @@ class CheckWindow(tk.Frame):
 
         frame_lbox_forms = tk.LabelFrame(self, width=w//6, text='Номера бланков')
         frame_lbox_forms.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
-        lbox_forms = tk.Listbox(frame_lbox_forms, selectmode=tk.SINGLE, exportselection=0)
+        lbox_forms = tk.Listbox(frame_lbox_forms, selectmode=tk.SINGLE, exportselection=0, font=('Tahoma', 16))
         lbox_forms.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
         lbox_forms.bind('<<ListboxSelect>>', self._on_form_select)
         scroll = tk.Scrollbar(frame_lbox_forms, command=lbox_forms.yview)
         scroll.pack(side=tk.RIGHT, fill=tk.BOTH)
         lbox_forms.config(yscrollcommand=scroll.set)
+        lbox_forms.bind("<Down>", self.OnEntryDown)
+        lbox_forms.bind("<Up>", self.OnEntryUp)
         self._lbox_forms = lbox_forms
 
         frame_lbox_scans = tk.LabelFrame(self, width=4*w//6, text='Список изображений')
         frame_lbox_scans.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
-        lbox_scans = tk.Listbox(frame_lbox_scans, selectmode=tk.SINGLE, exportselection=0)
+        lbox_scans = tk.Listbox(frame_lbox_scans, selectmode=tk.SINGLE, exportselection=0, font=('Tahoma', 16))
         lbox_scans.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
         lbox_scans.bind('<<ListboxSelect>>', self._on_scan_select)
         scroll = tk.Scrollbar(frame_lbox_scans, command=lbox_scans.yview)
         scroll.pack(side=tk.RIGHT, fill=tk.Y)
         lbox_scans.config(yscrollcommand=scroll.set)
+        lbox_scans.bind("<Down>", self.OnEntryDown)
+        lbox_scans.bind("<Up>", self.OnEntryUp)
         self._lbox_scans = lbox_scans
 
         frame_edit_image = tk.LabelFrame(self, width=w//3, text='Редактирование')
