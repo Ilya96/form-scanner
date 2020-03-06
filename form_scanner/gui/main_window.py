@@ -189,10 +189,12 @@ class HandRecognizeDialog(gui.tkSimpleDialog.Dialog):
     def __init__(self, image_path, parent, default_value = None, title = None):
         self._image_path = image_path
         self._default_value = default_value
+        self._rotated = False
         gui.tkSimpleDialog.Dialog.__init__(self, parent, title)
 
 
     def rotate_image(self):
+
         screen_width = self._body.winfo_screenwidth()
         screen_height = self._body.winfo_screenheight()
 
@@ -201,7 +203,12 @@ class HandRecognizeDialog(gui.tkSimpleDialog.Dialog):
         w = screen_width//2
         h = int(load.size[1] * (w/load.size[0]))
         load = load.resize((w, h))
-        load = load.rotate(180)
+
+        if not self._rotated:
+            load = load.rotate(180)
+            self._rotated = True
+        else:
+            self._rotated = False
 
         h = load.size[1] // 3
         w = load.size[0]
